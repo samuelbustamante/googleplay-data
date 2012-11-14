@@ -4,32 +4,37 @@ import urllib
 class AppData(object):
 
     def __init__(self, appId):
+        self.appId = appId
         self.data = dict()
-        self.url  = 'https://play.google.com/store/apps/details?id='
-        self.html = urllib.urlopen(self.url + appId).read()
-        self.soup = BeautifulSoup(self.html)
-        self.set_appId(appId)
+        self.url = 'https://play.google.com/store/apps/details?id='
+        self.request = urllib.urlopen(self.url + self.appId)
 
     def get_data(self):
         return self.data
 
     def set_data(self):
-        self.set_appName()
-        self.set_appImage()
-        self.set_appAuthorName()
-        self.set_appAuthorUrl()
-        self.set_appDescription()
-        self.set_appVersion()
-        self.set_appPrice()
-        #self.set_appCategory()
-        self.set_appPublished()
-        self.set_appDownloads()
-        self.set_appSize()
-        self.set_appContentRating()
-        self.set_appScreenshots()
 
-    def set_appId(self, appId):
-        self.data['appId'] = appId
+        if self.request.getcode() == 200:
+            self.soup = BeautifulSoup(self.request.read())
+            self.set_appId()
+            self.set_appName()
+            self.set_appImage()
+            self.set_appAuthorName()
+            self.set_appAuthorUrl()
+            self.set_appDescription()
+            self.set_appVersion()
+            self.set_appPrice()
+            #self.set_appCategory()
+            self.set_appPublished()
+            self.set_appDownloads()
+            self.set_appSize()
+            self.set_appContentRating()
+            self.set_appScreenshots()
+        else:
+            self.data['error'] = 'App not found'
+
+    def set_appId(self):
+        self.data['appId'] = self.appId
 
     def set_appName(self):
         appName = self.soup('span', {'itemprop': 'name'})[0]

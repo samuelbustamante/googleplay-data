@@ -5,7 +5,7 @@ class AppData(object):
 
     def __init__(self, appId):
         self.data = dict()
-        self.url  = 'http://play.google.com/store/apps/details?id='
+        self.url  = 'https://play.google.com/store/apps/details?id='
         self.html = urllib.urlopen(self.url + appId).read()
         self.soup = BeautifulSoup(self.html)
         self.set_appId(appId)

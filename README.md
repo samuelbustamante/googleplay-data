@@ -1,2 +1,2 @@
-search-app-googleplay
+googleplay-data
 =====================

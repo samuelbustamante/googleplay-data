@@ -1,5 +1,6 @@
 from BeautifulSoup import BeautifulSoup
 import urllib
+import re
 
 class AppData(object):
 
@@ -18,18 +19,20 @@ class AppData(object):
             self.soup = BeautifulSoup(self.request.read())
             self.set_appId()
             self.set_appName()
-            self.set_appImage()
+            self.set_appIcon()
             self.set_appAuthorName()
             self.set_appAuthorUrl()
             self.set_appDescription()
             self.set_appVersion()
             self.set_appPrice()
-            #self.set_appCategory()
+            self.set_appCategory()
             self.set_appPublished()
             self.set_appDownloads()
             self.set_appSize()
             self.set_appContentRating()
+            self.set_appBanner()
             self.set_appScreenshots()
+            self.set_appVideo()
         else:
             self.data['error'] = 'App not found'
 
@@ -40,17 +43,17 @@ class AppData(object):
         appName = self.soup('span', {'itemprop': 'name'})[0]
         self.data['appName'] = appName['content']
 
-    def set_appImage(self):
-        appImage = self.soup('span', {'itemprop': 'image'})[0]
-        self.data['appImage'] = appImage['content']
+    def set_appIcon(self):
+        appIcon = self.soup('span', {'itemprop': 'image'})[0]
+        self.data['appIcon'] = appIcon['content']
 
     def set_appAuthorName(self):
-        appAuthorName = self.soup('span', {'itemprop': 'name'})[1]
-        self.data['appAuthorName'] = appAuthorName['content']
+        appAuthorName = self.soup('span', {'itemprop': 'author'})[0]
+        self.data['appAuthorName'] = appAuthorName('span', {'itemprop': 'name'})[0]['content']
 
     def set_appAuthorUrl(self):
-        appAuthorUrl = self.soup('span', {'itemprop': 'url'})[0]
-        self.data['appAuthorUrl'] = appAuthorUrl['content']
+        appAuthorUrl = self.soup('span', {'itemprop': 'author'})[0]
+        self.data['appAuthorUrl'] = appAuthorUrl('span', {'itemprop': 'url'})[0]['content']
 
     def set_appDescription(self):
         appDescription = self.soup('div', {'itemprop': 'description'})[0]
@@ -69,7 +72,7 @@ class AppData(object):
         self.data['appPrice'] = appPrice['content']
 
     def set_appCategory(self):
-        appCategory = self.soup('a', {'href': '/store/apps/category/*'})[0]
+        appCategory = self.soup('a', {'href': re.compile('^/store/apps/category/')})[0]
         self.data['appCategory'] = appCategory.contents[0]
 
     def set_appPublished(self):
@@ -88,6 +91,15 @@ class AppData(object):
         appContentRating = self.soup('dd', {'itemprop': 'contentRating'})[0]
         self.data['appContentRating'] = appContentRating.contents[0]
 
+    def set_appBanner(self):
+        appBanner = self.soup('div', {'class': 'doc-banner-image-container'})[0]
+        self.data['appBanner'] = appBanner.contents[0]['src']
+
     def set_appScreenshots(self):
         appScreenshots = self.soup('img', {'itemprop': 'screenshot'})
-        self.data['screenshots'] = [screenshot['src'] for screenshot in appScreenshots]
+        self.data['appScreenshots'] = [screenshot['src'] for screenshot in appScreenshots]
+
+    def set_appVideo(self):
+        appVideo = self.soup('div', {'class': 'doc-video-section'})
+        if len(appVideo):
+            self.data['appVideo'] = appVideo[0]('param', {'name': 'movie'})[0]['value']

@@ -4,22 +4,14 @@ import re
 
 class GooglePlayData(object):
 
-    def __init__(self, appId):
-        self.appId = appId
-        self.data = dict()
-        self.url = 'https://play.google.com/store/apps/details?id='
-        self.request = urllib.urlopen(self.url + self.appId)
-
-    def get_data(self):
-        return self.data
-
-    def set_data(self):
-
-        if self.request.getcode() == 200:
-            self.soup = BeautifulSoup(self.request.read())
+    def __init__(self, app_id):
+        self.data = dict(id=app_id)
+        url = 'https://play.google.com/store/apps/details?id='
+        request = urllib.urlopen(url + app_id)
+        if request.getcode() == 200:
+            self.soup = BeautifulSoup(request.read())
 
             # Set data
-            self.set_id()
             self.set_name()
             self.set_icon()
             self.set_name_developer()
@@ -42,8 +34,8 @@ class GooglePlayData(object):
         else:
             self.data['error'] = 'App not found'
 
-    def set_id(self):
-        self.data['id'] = self.appId
+    def get_data(self):
+        return self.data
 
     def set_name(self):
         data = self.soup('span', {'itemprop': 'name'})[0]

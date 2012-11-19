@@ -1,6 +1,6 @@
-from app_data import AppData
+from base import GooglePlayData
 
-data = AppData('slide.colorSplashFX')
+data = GooglePlayData('slide.colorSplashFX')
 data.set_data()
 
 print data.get_data()

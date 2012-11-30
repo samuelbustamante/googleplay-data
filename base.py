@@ -2,6 +2,10 @@ from BeautifulSoup import BeautifulSoup
 import urllib
 import re
 
+class GooglePlayError404(Exception):
+    def __str__(self):
+        return 'App not found.'
+
 class GooglePlayData(object):
 
     def __init__(self, app_id):
@@ -13,26 +17,26 @@ class GooglePlayData(object):
 
             # Set data
             self.set_name()
-            self.set_icon()
-            self.set_name_developer()
-            self.set_url_developer()
             self.set_description()
-            self.set_votes()
             self.set_average_rating()
+            self.set_votes()
             self.set_version()
             self.set_price()
-            self.set_category()
-            self.set_url_category()
             self.set_published()
             self.set_downloads()
             self.set_size()
-            self.set_content_rating()
+            self.set_icon()
             self.set_banner()
-            self.set_screenshots()
             self.set_video()
+            self.set_developer_name()
+            self.set_developer_url()
+            self.set_category_name()
+            self.set_category_url()
+            self.set_content_rating()
+            self.set_screenshots()
 
         else:
-            self.data['error'] = 'App not found'
+            raise GooglePlayError404()
 
     def get_data(self):
         return self.data
@@ -45,25 +49,31 @@ class GooglePlayData(object):
         data = self.soup('span', {'itemprop': 'image'})[0]
         self.data['icon'] = data['content']
 
-    def set_name_developer(self):
+    def set_developer_name(self):
         data = self.soup('span', {'itemprop': 'author'})[0]
-        self.data['name_developer'] = data('span', {'itemprop': 'name'})[0]['content']
+        self.data['developer_name'] = data('span', {'itemprop': 'name'})[0]['content']
 
-    def set_url_developer(self):
+    def set_developer_url(self):
         data = self.soup('span', {'itemprop': 'author'})[0]
-        self.data['url_developer'] = data('span', {'itemprop': 'url'})[0]['content']
+        self.data['developer_url'] = data('span', {'itemprop': 'url'})[0]['content']
 
     def set_description(self):
         data = self.soup('div', {'itemprop': 'description'})[0]
         self.data['description'] = ' '.join(data.findAll(text=True))
 
     def set_votes(self):
-        data = self.soup('div', {'class' : 'votes'})[0]
-        self.data['votes'] = data.contents[0]
+        data = self.soup('div', {'class' : 'votes'})
+        if len(data) > 0:
+            self.data['votes'] = int(data[0].contents[0].replace(',', ''))
+        else:
+            self.data['votes'] = 0
 
     def set_average_rating(self):
-        data = self.soup('div', {'class': 'average-rating-value'})[0]
-        self.data['average_rating'] = data.contents[0]
+        data = self.soup('div', {'class': 'average-rating-value'})
+        if len(data) > 0:
+            self.data['average_rating'] = float(data[0].contents[0])
+        else:
+            self.data['average_rating'] = 0.0
 
     def set_version(self):
         data = self.soup('dd', {'itemprop': 'softwareVersion'})[0]
@@ -71,15 +81,15 @@ class GooglePlayData(object):
 
     def set_price(self):
         data = self.soup('span', {'itemprop': 'price'})[0]
-        self.data['price'] = data['content']
+        self.data['price'] = float(data['content'].replace('$', ''))
 
-    def set_category(self):
+    def set_category_name(self):
         data = self.soup('a', {'href': re.compile('^/store/apps/category/')})[0]
-        self.data['category'] = data.contents[0]
+        self.data['category_name'] = data.contents[0]
 
-    def set_url_category(self):
+    def set_category_url(self):
         data = self.soup('a', {'href': re.compile('^/store/apps/category/')})[0]
-        self.data['url_category'] = data['href']
+        self.data['category_url'] = data['href']
 
     def set_published(self):
         data = self.soup('time', {'itemprop': 'datePublished'})[0]
@@ -98,8 +108,11 @@ class GooglePlayData(object):
         self.data['content_rating'] = data.contents[0]
 
     def set_banner(self):
-        data = self.soup('div', {'class': 'doc-banner-image-container'})[0]
-        self.data['banner'] = data.contents[0]['src']
+        data = self.soup('div', {'class': 'doc-banner-image-container'})
+        if len(data) > 0:
+            self.data['banner'] = data[0].contents[0]['src']
+        else:
+            self.data['banner'] = ''
 
     def set_screenshots(self):
         data = self.soup('img', {'itemprop': 'screenshot'})
@@ -109,3 +122,5 @@ class GooglePlayData(object):
         data = self.soup('div', {'class': 'doc-video-section'})
         if len(data) > 0:
             self.data['video'] = data[0]('param', {'name': 'movie'})[0]['value']
+        else:
+            self.data['video'] = ''

@@ -1,5 +1,5 @@
 from base import GooglePlayData
 
-data = GooglePlayData('slide.colorSplashFX')
+data = GooglePlayData('com.pythonconsole')
 
 print data.get_data()
